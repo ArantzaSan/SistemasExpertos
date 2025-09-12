@@ -1,69 +1,53 @@
-# Definición de los datos
-data = [
-    {"Temperatura": "Alta", "Humedad": "Alta", "Nublado": "Sí", "Llevar_paraguas": "Sí"},
-    {"Temperatura": "Alta", "Humedad": "Baja", "Nublado": "Sí", "Llevar_paraguas": "No"},
-    {"Temperatura": "Baja", "Humedad": "Alta", "Nublado": "Sí", "Llevar_paraguas": "Sí"},
-    {"Temperatura": "Baja", "Humedad": "Baja", "Nublado": "No", "Llevar_paraguas": "No"},
-    {"Temperatura": "Alta", "Humedad": "Alta", "Nublado": "No", "Llevar_paraguas": "No"},
-    {"Temperatura": "Baja", "Humedad": "Baja", "Nublado": "Sí", "Llevar_paraguas": "Sí"},
-    {"Temperatura": "Alta", "Humedad": "Baja", "Nublado": "No", "Llevar_paraguas": "No"},
-]
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
+import matplotlib.pyplot as plt
 
-# Función para convertir las categorías en valores numéricos
-def convertir_a_numerico(valor):
-    if valor == "Alta":
-        return 1
-    elif valor == "Baja":
-        return 0
-    elif valor == "Sí":
-        return 1
-    elif valor == "No":
-        return 0
-    return valor
+# Paso 1: Crear un conjunto de datos de ejemplo
+# Datos: [Temperatura (Alta/Baja), Humedad (Alta/Baja), Nublado (Sí/No)]
+# Etiqueta: Llevar paraguas (Sí/No)
+data = {
+    "Temperatura": ["Alta", "Alta", "Baja", "Baja", "Alta", "Baja", "Alta", "Baja", "Alta", "Baja"],
+    "Humedad": ["Alta", "Baja", "Alta", "Baja", "Alta", "Alta", "Baja", "Baja", "Baja", "Alta"],
+    "Nublado": ["Sí", "Sí", "No", "No", "Sí", "Sí", "No", "Sí", "No", "Sí"],
+    "Llevar_paraguas": ["Sí", "No", "Sí", "No", "Sí", "Sí", "No", "No", "No", "Sí"]
+}
 
-# Función para entrenar el árbol de decisión simple
-def entrenar_arbol(data):
-    # Separamos las características de la etiqueta
-    X = []
-    y = []
-    
-    for ejemplo in data:
-        X.append([convertir_a_numerico(ejemplo["Temperatura"]),
-                  convertir_a_numerico(ejemplo["Humedad"]),
-                  convertir_a_numerico(ejemplo["Nublado"])])
-        y.append(convertir_a_numerico(ejemplo["Llevar_paraguas"]))
-    
-    # Ahora tenemos dos listas: X (características) y y (etiquetas)
-    # Simularemos un árbol de decisión con reglas basadas en la temperatura y el nublado
+# Convertimos los datos a un DataFrame
+df = pd.DataFrame(data)
 
-    # Árbol de decisión simple: primer nodo basado en la temperatura
-    # Si la temperatura es alta, no llevará paraguas, si es baja, mirar el nublado
-    def arbol_decision(temperatura, humedad, nublado):
-        if temperatura == 1:  # Temperatura alta
-            return "No"  # No llevar paraguas
-        elif temperatura == 0:  # Temperatura baja
-            if nublado == 1:  # Si está nublado
-                return "Sí"  # Llevar paraguas
-            else:
-                return "No"  # No llevar paraguas
-        return "No"
+# Paso 2: Preprocesar los datos
+# Convertimos las columnas categóricas (Texto) en valores numéricos
+df['Temperatura'] = df['Temperatura'].map({"Alta": 1, "Baja": 0})
+df['Humedad'] = df['Humedad'].map({"Alta": 1, "Baja": 0})
+df['Nublado'] = df['Nublado'].map({"Sí": 1, "No": 0})
+df['Llevar_paraguas'] = df['Llevar_paraguas'].map({"Sí": 1, "No": 0})
 
-    return arbol_decision
+# Paso 3: Separar las características (X) y la etiqueta (y)
+X = df.drop("Llevar_paraguas", axis=1)  # Características
+y = df["Llevar_paraguas"]  # Etiqueta
 
-# Entrenamos el árbol de decisión
-arbol = entrenar_arbol(data)
+# Paso 4: Entrenar el árbol de decisión
+clf = DecisionTreeClassifier(criterion="entropy")  # Usamos entropía como medida de impureza
+clf = clf.fit(X, y)
 
-# Paso 2: Hacer predicciones
-# Nuevos datos para predecir si se debe llevar paraguas
+# Paso 5: Visualizar el árbol de decisión
+plt.figure(figsize=(10, 8))
+tree.plot_tree(clf, filled=True, feature_names=X.columns, class_names=["No", "Sí"])
+plt.show()
+
+# Paso 6: Realizar predicciones
+# Nuevos días para predecir
+# Día 1: Temperatura alta, Humedad baja, No nublado
+# Día 2: Temperatura baja, Humedad alta, Nublado
 nuevos_dias = [
-    {"Temperatura": "Alta", "Humedad": "Baja", "Nublado": "No"},  # Día 1
-    {"Temperatura": "Baja", "Humedad": "Alta", "Nublado": "Sí"},  # Día 2
-    {"Temperatura": "Baja", "Humedad": "Baja", "Nublado": "No"},  # Día 3
+    [1, 0, 0],  # Día 1
+    [0, 1, 1]   # Día 2
 ]
 
-# Predicciones
-for i, dia in enumerate(nuevos_dias):
-    respuesta = arbol(convertir_a_numerico(dia["Temperatura"]),
-                      convertir_a_numerico(dia["Humedad"]),
-                      convertir_a_numerico(dia["Nublado"]))
-    print(f"Día {i + 1} - Llevar paraguas: {respuesta}")
+# Predicción
+predicciones = clf.predict(nuevos_dias)
+for i, pred in enumerate(predicciones):
+    print(f"Día {i+1} - Llevar paraguas: {'Sí' if pred == 1 else 'No'}")
+
+pip install scikit-learn
