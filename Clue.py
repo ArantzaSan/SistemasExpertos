@@ -3,7 +3,7 @@ import random
 def simulador_clue():
     """
     Simulador simplificado del juego Clue (Cluedo) con 5 finales narrativos.
-    """
+    """ 
     # 1. Definición de Componentes
     personajes = {
         "Menta": "Profesor Menta (Arqueólogo)",
